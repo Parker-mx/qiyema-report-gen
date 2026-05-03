@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业码消费账单 · 深度分析报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* A3 Landscape Paper Style */
+        .page {
+            width: 1684px;
+            min-height: 1191px;
+            margin: 20px auto;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 60px;
+            position: relative;
+            page-break-after: always;
+        }
+        .page:last-child {
+            page-break-after: auto;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1A73E8 0%, #0d47a1 100%);
+            border-radius: 0 0 28px 28px;
+            padding: 44px 40px 56px;
+            color: #fff;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -30px;
+            width: 220px;
+            height: 220px;
+            background: rgba(255,255,255,.07);
+            border-radius: 50%;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            right: 100px;
+            width: 180px;
+            height: 180px;
+            background: rgba(255,255,255,.05);
+            border-radius: 50%;
+        }
+        .header-title {
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .header-sub {
+            font-size: 16px;
+            opacity: 0.85;
+            margin-bottom: 28px;
+            position: relative;
+        }
+        .header-kpis {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .kpi {
+            background: rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 20px 28px;
+            min-width: 160px;
+            backdrop-filter: blur(10px);
+        }
+        .kpi-val {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .kpi-lbl {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+        
+        /* Section Title */
+        .section {
+            margin-bottom: 32px;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1A73E8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Cards */
+        .row3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .row2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #eee;
+        }
+        .card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .card-val {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* Chart Container */
+        .chart {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        .chart img {
+            max-width: 100%;
+            height: auto;
+        }
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        /* Insight Box */
+        .insight {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-top: 16px;
+            border-left: 4px solid #1A73E8;
+        }
+        .insight-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1A73E8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .insight ul {
+            margin-left: 20px;
+        }
+        .insight li {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+            line-height: 1.7;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-blue { background: #e8f0fe; color: #1A73E8; }
+        .badge-green { background: #e8f5e9; color: #34A853; }
+        .badge-orange { background: #fff8e1; color: #f9a825; }
+        .badge-red { background: #ffebee; color: #e53935; }
+        .badge-purple { background: #f3e5f5; color: #9C27B0; }
+        
+        /* KPI Highlights */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .kpi-box .val {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1A73E8;
+            margin-bottom: 4px;
+        }
+        .kpi-box .lbl {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        /* Page Number */
+        .page-num {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+            margin-top: 32px;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body { background: #fff; }
+            .page { 
+                box-shadow: none; 
+                margin: 0;
+                width: 100%;
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== PAGE 1 ========== -->
+<div class="page">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">📊 企业码消费账单 · 深度分析报告</div>
+        <div class="header-sub">账期：2026-04-01 ~ 2026-04-30　｜　生成：2026-05-03</div>
+        <div class="header-kpis">
+            <div class="kpi">
+                <div class="kpi-val">496.7</div>
+                <div class="kpi-lbl">企业消费总额（万元）</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-val">76,805</div>
+                <div class="kpi-lbl">总订单笔数（笔）</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-val">64.7</div>
+                <div class="kpi-lbl">整体客单价（元）</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-val">24</div>
+                <div class="kpi-lbl">覆盖部门（个）</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-val">30</div>
+                <div class="kpi-lbl">消费省份（个）</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-val">10.7%</div>
+                <div class="kpi-lbl">非企付订单占比</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: 消费结构总览 -->
+    <div class="section">
+        <div class="section-title">🏗 消费结构总览</div>
+        <div class="row3">
+            <div class="card">
+                <div class="card-title">企业实付总额（扣除退款）</div>
+                <div class="card-val" style="color:#1A73E8">¥4,500,372</div>
+                <div class="card-sub">净额退款后金额</div>
+            </div>
+            <div class="card">
+                <div class="card-title">非企业付金额（员工自付）</div>
+                <div class="card-val" style="color:#f9a825">¥466,608</div>
+                <div class="card-sub">员工自付总额</div>
+            </div>
+            <div class="card">
+                <div class="card-title">平均订单原价（件单价）</div>
+                <div class="card-val" style="color:#34A853">¥64.7</div>
+                <div class="card-sub">整体客单价，件均价</div>
+            </div>
+        </div>
+        
+        <div style="margin:16px 0 8px;font-size:14px;font-weight:600;color:#555">📊 消费价格段分布</div>
+        <div class="chart">
+            <img src="static/images/price_distribution.png" alt="消费价格段分布">
+        </div>
+    </div>
+
+    <!-- Section 2: 省份概览 -->
+    <div class="section">
+        <div class="section-title">🌍 消费省份分析</div>
+        <div class="kpi-grid">
+            <div class="kpi-box">
+                <div class="val">四川 44.3%</div>
+                <div class="lbl">消费省份占比第一</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">北京 17.3%</div>
+                <div class="lbl">消费省份占比第二</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">陕西 6.0%</div>
+                <div class="lbl">消费省份占比第三</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">72.1%</div>
+                <div class="lbl">Top3 集中度</div>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart">
+                <div class="chart-title">【消费省份 TOP15（消费者所在省）】</div>
+                <img src="static/images/province_top15.png" alt="省份TOP15">
+            </div>
+            <div class="chart">
+                <div class="chart-title">【消费省份单均价 TOP10（元）】</div>
+                <img src="static/images/province_avg_price.png" alt="省份单均价">
+            </div>
+        </div>
+    </div>
+
+    <div class="page-num">2026/5/3 15:41</div>
+</div>
+
+<!-- ========== PAGE 2 ========== -->
+<div class="page">
+    <div class="section">
+        <div class="insight">
+            <div class="insight-title">💡 消费省份洞察</div>
+            <ul>
+                <li><strong>四川省一枝独秀：</strong>消费占比高达44.3%，与各部门员工地域分布强相关，是第一大消费省份</li>
+                <li><strong>消费地与商户分布差异：</strong>消费者集中在四川省，但商户覆盖30个省份，说明福利覆盖广但使用集中度高</li>
+                <li><strong>客单价结构：</strong>海南、四川客单价较高，说明大额聚餐/正餐场景偏多</li>
+                <li><strong>建议：</strong>结合各部门人数，计算人均消费强度，识别真正的"高消费强度"部门 vs "人数带动高总量"部门</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🏢 部门消费分析 24个部门</div>
+        <div class="kpi-grid">
+            <div class="kpi-box">
+                <div class="val">78100部</div>
+                <div class="lbl">消费总额最高部门</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">78.2%</div>
+                <div class="lbl">Top3 部门集中度</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">3,200笔</div>
+                <div class="lbl">部门平均订单数</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">¥67.2</div>
+                <div class="lbl">部门平均客单价</div>
+            </div>
+        </div>
+        <div class="chart">
+            <div class="chart-title">【部门消费 TOP10】</div>
+            <img src="static/images/dept_top10.png" alt="部门TOP10">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="insight">
+            <div class="insight-title">💡 部门分析洞察</div>
+            <ul>
+                <li><strong>头部部门高度集中：</strong>78100部以绝对优势居首，前3个部门合计占78.2%，头部效应非常显著</li>
+                <li><strong>74159部门客单价最高：</strong>达¥112.2，说明该部门聚餐/高消费场景偏多</li>
+                <li><strong>部门间差异大：</strong>78100部消费额是其他部门的3-10倍，与员工规模和地域分布强相关</li>
+                <li><strong>建议：</strong>对低活跃部门（如排名后5名）做定向推送，提升福利感知度；与HR确认各部门人数，计算人均消费更有参考价值</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-num">2026/5/3 15:41</div>
+</div>
+
+<!-- ========== PAGE 3 ========== -->
+<div class="page">
+    <div class="section">
+        <div class="section-title">🏪 商户分析（TOP20 + 单均价排名）</div>
+        <div class="kpi-grid">
+            <div class="kpi-box">
+                <div class="val">烧烤类</div>
+                <div class="lbl">消费总额最高品类</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">24,865</div>
+                <div class="lbl">活跃商户总数</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">¥428</div>
+                <div class="lbl">最高单笔消费</div>
+            </div>
+            <div class="kpi-box">
+                <div class="val">¥221</div>
+                <div class="lbl">好旺角炭火烧烤客单价</div>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart">
+                <div class="chart-title">【消费总额 TOP20 商户】</div>
+                <img src="static/images/merchant_top20.png" alt="商户TOP20">
+            </div>
+            <div class="chart">
+                <div class="chart-title">【商户单均价 TOP15（元）】</div>
+                <img src="static/images/merchant_avg_price.png" alt="商户单均价">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="insight">
+            <div class="insight-title">💡 商户分析洞察</div>
+            <ul>
+                <li><strong>烧烤类商户霸榜：</strong>TOP20商户几乎被面馆、小吃、串串香等中式快餐占领，反映员工午餐刚需强烈</li>
+                <li><strong>中式餐饮占主导：</strong>客单价¥200+的烧烤类商户占据主导，说明聚餐场景明显</li>
+                <li><strong>大额单均价商户：</strong>日料、西餐等高客单价业态虽然笔数少，但单均价远超均值，适合对接团建/聚餐场景</li>
+                <li><strong>建议：</strong>与头部商户谈专属折扣；重点拓展早餐、下午茶品类，延伸福利使用时段</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">💰 非企业付金额 vs 订单原价关系分析</div>
+        <div class="row3">
+            <div class="card">
+                <div class="card-title">有员工自付的订单</div>
+                <div class="card-val" style="color:#1A73E8">9,801 笔</div>
+                <div class="card-sub">占总订单 12.8%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">平均企业补贴比例（全部）</div>
+                <div class="card-val" style="color:#34A853">90.6%</div>
+                <div class="card-sub">企业承担约90%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">非企业付总额</div>
+                <div class="card-val" style="color:#f9a825">¥531,210</div>
+                <div class="card-sub">员工自付合计</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-num">2026/5/3 15:41</div>
+</div>
+
+<!-- ========== PAGE 4 ========== -->
+<div class="page">
+    <div class="section">
+        <div class="section-title">📊 补贴结构 vs 订单原价分析</div>
+        <div class="chart">
+            <img src="static/images/subsidy_relation.png" alt="补贴关系">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="insight">
+            <div class="insight-title">💡 补贴结构洞察</div>
+            <ul>
+                <li><strong>企业承担绝大多数：</strong>约87%的订单为企业全额补贴，员工自付比例仅12.8%，福利感知度极高</li>
+                <li><strong>自付仅在特定场景：</strong>个人垫付订单说明：员工选择了超出额度的商品，或特定品类有大单自付机制</li>
+                <li><strong>订单原价越高，自付比例越高：</strong>1000元+大单中，员工自付比例明显上升，符合"企业付额度+员工补差价"的设计逻辑</li>
+                <li><strong>建议：</strong>精细化补贴策略：可针对高订单原价（如聚餐、团建）设置梯度补贴比例，既控制成本又提升大单体验</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">📈 月度趋势分析</div>
+        <div class="chart-row">
+            <div class="chart">
+                <div class="chart-title">【日单均价趋势】</div>
+                <img src="static/images/daily_avg_price_trend.png" alt="日均单价趋势">
+            </div>
+            <div class="chart">
+                <div class="chart-title">【日消费额趋势】</div>
+                <img src="static/images/daily_amount_trend.png" alt="日消费额趋势">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="insight">
+            <div class="insight-title">💡 月度趋势洞察</div>
+            <ul>
+                <li><strong>4月底消费明显上升：</strong>月末（尤其是4/25-4/30）消费额有显著上升趋势，与五一假期前备货/聚餐需求有关</li>
+                <li><strong>客单价波动：</strong>日均单价在¥50-¥80区间波动，月末有上升趋势</li>
+                <li><strong>工作日 vs 周末：</strong>工作日消费明显高于周末，符合日常餐饮消费模式</li>
+                <li><strong>建议：</strong>五一/端午可提前推送大额满减优惠，转化聚餐需求</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-num">2026/5/3 15:41</div>
+</div>
+
+<!-- ========== PAGE 5 ========== -->
+<div class="page">
+    <div class="section">
+        <div class="section-title">🔍 综合洞察与发现</div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+            <div class="card" style="border-left:4px solid #1A73E8;">
+                <div style="font-size:18px;font-weight:700;color:#1A73E8;margin-bottom:12px">📊 核心发现（按重要性排序）</div>
+                <div style="margin-bottom:16px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <span class="badge badge-blue">①</span>
+                        <strong>消费爆发式增长</strong>
+                    </div>
+                    <div style="font-size:13px;color:#666;margin-left:36px">4月环比增长139.5%，笔数增长89.5%</div>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <span class="badge badge-green">②</span>
+                        <strong>地域高度集中</strong>
+                    </div>
+                    <div style="font-size:13px;color:#666;margin-left:36px">四川44.3%+北京17.3%合计占比超60%</div>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <span class="badge badge-orange">③</span>
+                        <strong>小额消费主导</strong>
+                    </div>
+                    <div style="font-size:13px;color:#666;margin-left:36px">78%订单在50元以下，典型工作餐模式</div>
+                </div>
+                <div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <span class="badge badge-red">④</span>
+                        <strong>客单价提升</strong>
+                    </div>
+                    <div style="font-size:13px;color:#666;margin-left:36px">从¥50.3→¥63.8（+26.8%），消费升级明显</div>
+                </div>
+            </div>
+            
+            <div class="card" style="border-left:4px solid #e53935;">
+                <div style="font-size:18px;font-weight:700;color:#e53935;margin-bottom:12px">⚠️ 风险与关注点</div>
+                <div style="margin-bottom:12px;font-size:13px;color:#555">
+                    <strong>Top3部门过于集中：</strong>若头部部门人员变动，消费总量波动大，建议拓展更多部门
+                </div>
+                <div style="margin-bottom:12px;font-size:13px;color:#555">
+                    <strong>商户集中风险：</strong>TOP5商户占消费比极高，若商户退出平台影响显著，需建立B面储备
+                </div>
+                <div style="margin-bottom:12px;font-size:13px;color:#555">
+                    <strong>区域集中风险：</strong>四川一省独大，需关注区域政策变化影响
+                </div>
+                <div style="font-size:13px;color:#555">
+                    <strong>五一假期效应：</strong>4月底大额消费上升，需关注节后消费回落情况
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+                <div style="font-size:18px;font-weight:700;color:#34A853;margin-bottom:16px">📌 运营建议</div>
+                <div class="insight" style="margin-bottom:12px;border-left-color:#34A853;">
+                    <div style="font-size:13px;color:#555;line-height:1.8">
+                        •🏪 头部商户重点维护：四川、北京头部餐饮商户直接影响40%+消费体验，需签订稳定合作协议<br>
+                        •🍜 拓展早餐/下午茶：当前以午餐为主，早餐场景几乎空白，可成为新的增长点<br>
+                        •📊 建立人均指标体系：结合部门人数计算人均消费强度，识别真正的"高效"vs"低效"部门<br>
+                        •🔗 拓展大单商户：聚餐、团建类高客单价商户对接，满足团队消费需求
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div style="font-size:18px;font-weight:700;color:#1A73E8;margin-bottom:16px">✅ 数据健康度评估</div>
+                <div class="insight" style="border-left-color:#1A73E8;">
+                    <div style="font-size:13px;color:#555;line-height:1.8">
+                        •退款率 &lt; 0.5% → 整体健康<br>
+                        •企付占比 87%+ → 福利感知极强<br>
+                        •活跃商户 24,865+ → 供给充分<br>
+                        •30省全覆盖 → 地域渗透完整<br>
+                        •4月消费爆发 → 使用深度显著提升
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        本报告基于 2026年4月账单数据（76,805笔订单）生成 ｜ 数据来源：企业对账单系统 ｜ 分析工具：企业码数据分析自动化系统
+    </div>
+
+    <div class="page-num">2026/5/3 15:41</div>
+</div>
+
+</body>
+</html>
